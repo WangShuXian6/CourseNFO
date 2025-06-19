@@ -1,0 +1,38 @@
+{
+    "min_course_name_length": 10,
+    "tag_file_extension": ".tag",
+    "overwrite_existing": true,
+    "poster_dir": "posters",
+    "video_extensions": [
+        ".mp4",
+        ".mkv",
+        ".avi"
+    ],
+    "course_types": [
+        {
+            "name": "设计",
+            "description": "设计相关课程"
+        },
+        {
+            "name": "前端",
+            "description": "Web前端开发课程"
+        },
+        {
+            "name": "后端",
+            "description": "服务器端开发课程"
+        },
+        {
+            "name": "数据库",
+            "description": "数据库相关课程"
+        },
+        {
+            "name": "运维",
+            "description": "系统运维相关课程"
+        },
+        {
+            "name": "其他",
+            "description": "其他类型课程"
+        }
+    ],
+    "check_nomedia": false
+}
