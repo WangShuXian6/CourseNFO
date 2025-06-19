@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
 build/
 develop-eggs/
 dist/
@@ -20,26 +21,34 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
-venv/
-env/
-ENV/
-.env/
+# Poetry
+poetry.lock
 .venv/
+
+# PyInstaller
+*.manifest
+*.spec
+build/
+dist/
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-.project
-.pydevproject
-.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Virtual Environment
+venv/
+ENV/
+.env/
+.venv/
 
 # Project specific
 *.log
-.DS_Store
-Thumbs.db
 *.bak
 *.tmp
 *.temp

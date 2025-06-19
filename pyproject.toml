@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "course-nfo-manager"
+version = "0.1.0"
+description = "课程NFO管理器 - 用于管理和生成在线课程NFO文件的工具"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+pathlib = "1.0.1"
+Pillow = "^10.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0"
+black = "^23.0"
+isort = "^5.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+course-nfo-manager = "src.main:main" 
