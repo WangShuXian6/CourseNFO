@@ -54,15 +54,43 @@ jobs:
         pip install pyinstaller
         pip uninstall -y pathlib
 
+    - name: Create default icons
+      run: |
+        python -c "
+        from PIL import Image
+        import os
+        
+        # 创建一个简单的图标
+        img = Image.new('RGB', (256, 256), color='white')
+        
+        # 确保目录存在
+        os.makedirs('docs', exist_ok=True)
+        
+        # 保存为 ICO 文件
+        img.save('docs/icon.ico', format='ICO', sizes=[(256, 256)])
+        
+        # 保存为 ICNS 文件（macOS）
+        if os.name != 'nt':  # 不在 Windows 上执行
+            img.save('docs/icon.icns', format='ICNS')
+        "
+
     - name: Build with PyInstaller (Windows)
       if: matrix.os == 'windows-latest'
       run: |
-        pyinstaller --onefile --windowed --icon=docs/icon.ico --name=${{ matrix.asset_name }} main.py
+        if (Test-Path "docs/icon.ico") {
+          pyinstaller --onefile --windowed --icon=docs/icon.ico --name=${{ matrix.asset_name }} main.py
+        } else {
+          pyinstaller --onefile --windowed --name=${{ matrix.asset_name }} main.py
+        }
 
     - name: Build with PyInstaller (macOS)
       if: matrix.os == 'macos-latest'
       run: |
-        pyinstaller --onefile --windowed --icon=docs/icon.icns --name=${{ matrix.asset_name }} main.py
+        if [ -f "docs/icon.icns" ]; then
+          pyinstaller --onefile --windowed --icon=docs/icon.icns --name=${{ matrix.asset_name }} main.py
+        else
+          pyinstaller --onefile --windowed --name=${{ matrix.asset_name }} main.py
+        fi
 
     - name: Build with PyInstaller (Linux)
       if: matrix.os == 'ubuntu-latest'
