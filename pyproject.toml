@@ -8,7 +8,6 @@ packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-pathlib = "1.0.1"
 Pillow = "^10.0.0"
 
 [tool.poetry.group.dev.dependencies]
