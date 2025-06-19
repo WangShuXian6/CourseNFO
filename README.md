@@ -5,7 +5,7 @@
 [English](README_EN.md) | [简体中文](README.md) | [繁體中文](README_ZH_TW.md) | [日本語](README_JA.md) | [Español](README_ES.md) | [Deutsch](README_DE.md)
 
 [![License](https://img.shields.io/github/license/your-username/course-nfo-manager)](LICENSE)
-[![Python Version](https://img.shields.io/badge/python-3.6%2B-blue)](https://www.python.org/)
+[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
 [![GitHub stars](https://img.shields.io/github/stars/your-username/course-nfo-manager)](https://github.com/your-username/course-nfo-manager/stargazers)
 [![Build Status](https://github.com/your-username/course-nfo-manager/workflows/Build%20and%20Release/badge.svg)](https://github.com/your-username/course-nfo-manager/actions)
 
@@ -29,9 +29,9 @@
 - ✅ 完全支持绿联NAS影视中心
 - 🌟 理论上支持所有媒体库管理软件
 
-## 🛠️ 技术要求
+## ��️ 技术要求
 
-- Python 3.6+
+- Python 3.8+
 - 操作系统：Windows/Linux/macOS
 
 ## 📥 安装指南
