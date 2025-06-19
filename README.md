@@ -167,7 +167,7 @@ python main.py
 如有任何问题或建议，欢迎通过以下方式联系：
 
 - 提交 [Issue](https://github.com/your-username/course-nfo-manager/issues)
-- 发送邮件至：[your-email@example.com](mailto:your-email@example.com)
+- 发送邮件至：[airmusic@msn.com](mailto:airmusic@msn.com)
 
 ## 👨‍💻 开发指南
 

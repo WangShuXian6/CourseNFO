@@ -155,7 +155,7 @@ Complete C# Masterclass[Mandarin]
 ご質問やご提案がございましたら、以下の方法でお気軽にお問い合わせください：
 
 - [Issue](https://github.com/your-username/course-nfo-manager/issues)の作成
-- メール：[your-email@example.com](mailto:your-email@example.com)
+- メール：[airmusic@msn.com](mailto:airmusic@msn.com)
 
 ---
 

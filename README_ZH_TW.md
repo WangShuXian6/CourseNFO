@@ -155,7 +155,7 @@ python main.py
 如有任何問題或建議，歡迎通過以下方式聯絡：
 
 - 提交 [Issue](https://github.com/your-username/course-nfo-manager/issues)
-- 發送郵件至：[your-email@example.com](mailto:your-email@example.com)
+- 發送郵件至：[airmusic@msn.com](mailto:airmusic@msn.com)
 
 ---
 

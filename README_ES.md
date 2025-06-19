@@ -167,7 +167,7 @@ Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](L
 Si tienes alguna pregunta o sugerencia, no dudes en contactarnos a través de:
 
 - Crear un [Issue](https://github.com/your-username/course-nfo-manager/issues)
-- Enviar un correo a: [your-email@example.com](mailto:your-email@example.com)
+- Enviar un correo a: [airmusic@msn.com](mailto:airmusic@msn.com)
 
 ---
 

@@ -155,7 +155,7 @@ Thanks to all the developers who have contributed to this project!
 If you have any questions or suggestions, feel free to reach out through:
 
 - Submit an [Issue](https://github.com/your-username/course-nfo-manager/issues)
-- Send an email to: [your-email@example.com](mailto:your-email@example.com)
+- Send an email to: [airmusic@msn.com](mailto:airmusic@msn.com)
 
 ---
 
