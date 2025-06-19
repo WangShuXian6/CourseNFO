@@ -27,12 +27,12 @@ jobs:
             asset_content_type: application/x-executable
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -69,10 +69,11 @@ jobs:
         pyinstaller --onefile --name=${{ matrix.asset_name }} main.py
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.asset_name }}
         path: dist/${{ matrix.asset_name }}*
+        retention-days: 5
 
   release:
     needs: build
@@ -81,7 +82,7 @@ jobs:
 
     steps:
     - name: Download artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
 
     - name: Create Release
       id: create_release
