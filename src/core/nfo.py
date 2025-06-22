@@ -114,23 +114,33 @@ class NFOGenerator:
             for video in videos:
                 # 检查视频文件是否在指定目录或其子目录下
                 current_dir = video.path.parent
+                found_language_dir = False
+                language_dir_name = None
+                
+                # 向上遍历目录直到找到课程根目录
                 while current_dir.name != course.path.name:
+                    # 记录是否找到语言目录
                     if current_dir.name in {self.mandarin_dir_name, "原"}:
-                        nfo_path = video.path.with_suffix('.nfo')
-                        if not nfo_path.exists() or self.overwrite:
-                            self._generate_episode_nfo(
-                                NFOData(
-                                    title=video.name,
-                                    plot=f"章节：{chapter_name}\n" if chapter_name else "",
-                                    season=1,
-                                    episode=video.global_episode_number  # 使用全局集数
-                                ),
-                                nfo_path
-                            )
-                        break
+                        found_language_dir = True
+                        language_dir_name = current_dir.name
                     current_dir = current_dir.parent
                     if current_dir == course.path:  # 到达课程根目录，停止搜索
                         break
+                
+                # 如果在正确的语言目录下找到了视频文件，生成NFO
+                if found_language_dir:
+                    nfo_path = video.path.with_suffix('.nfo')
+                    if not nfo_path.exists() or self.overwrite:
+                        print(f"生成视频NFO: {video.name} (集数: {video.global_episode_number}, 语言: {language_dir_name})")
+                        self._generate_episode_nfo(
+                            NFOData(
+                                title=video.name,
+                                plot=f"章节：{chapter_name}\n" if chapter_name else "",
+                                season=1,
+                                episode=video.global_episode_number  # 使用全局集数
+                            ),
+                            nfo_path
+                        )
         
         if course.structure_type == 1:
             # 一级结构
@@ -219,3 +229,55 @@ class NFOGenerator:
         except Exception as e:
             print(f"读取NFO文件时出错: {e}")
             return None
+
+    def generate_tvshow_nfo(self, show_path: str, title: str) -> None:
+        """生成剧集NFO文件
+        
+        Args:
+            show_path: 剧集目录路径
+            title: 剧集标题
+        """
+        # 创建XML根节点
+        root = ET.Element("tvshow")
+        
+        # 添加标题
+        title_elem = ET.SubElement(root, "title")
+        title_elem.text = title
+        
+        # 格式化XML
+        xml_str = minidom.parseString(ET.tostring(root)).toprettyxml(indent="  ")
+        
+        # 保存文件
+        nfo_path = Path(show_path) / "tvshow.nfo"
+        nfo_path.write_text(xml_str, encoding="utf-8")
+    
+    def generate_episode_nfo(self, video_path: str, show_title: str, episode_num: int, title: str) -> None:
+        """生成单集NFO文件
+        
+        Args:
+            video_path: 视频文件路径
+            show_title: 剧集标题
+            episode_num: 集数
+            title: 本集标题
+        """
+        # 创建XML根节点
+        root = ET.Element("episodedetails")
+        
+        # 添加剧集标题
+        show_title_elem = ET.SubElement(root, "showtitle")
+        show_title_elem.text = show_title
+        
+        # 添加本集标题
+        title_elem = ET.SubElement(root, "title")
+        title_elem.text = title
+        
+        # 添加集数
+        episode_elem = ET.SubElement(root, "episode")
+        episode_elem.text = str(episode_num)
+        
+        # 格式化XML
+        xml_str = minidom.parseString(ET.tostring(root)).toprettyxml(indent="  ")
+        
+        # 保存文件
+        nfo_path = Path(video_path).with_suffix(".nfo")
+        nfo_path.write_text(xml_str, encoding="utf-8")

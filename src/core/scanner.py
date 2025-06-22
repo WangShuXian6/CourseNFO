@@ -77,8 +77,9 @@ class DirectoryScanner:
         """获取目录下所有视频文件并排序
         
         排序规则：
-        1. 父目录名称中的数字优先级最高
-        2. 在同一父目录内，按视频文件名中的数字排序
+        1. 最顶层目录的序号优先级最高
+        2. 在同一顶层目录内，按视频文件名的序号排序
+        3. 中间层目录的序号不影响排序
         """
         video_files = []
         for file in path.rglob("*"):
@@ -89,14 +90,25 @@ class DirectoryScanner:
                     episode_number=1  # 临时值，稍后更新
                 ))
         
-        # 按父目录名称中的数字和文件名中的数字排序
+        # 按最顶层目录名称中的数字和文件名中的数字排序
         def sort_key(video: VideoFile) -> tuple:
-            # 获取父目录名称中的数字
-            parent_dir_num = self._extract_number(video.path.parent.name)
+            # 获取视频文件的所有父目录路径（从下往上）
+            parents = list(video.path.parents)
+            # 找到最顶层目录（在path目录下的第一级目录）
+            top_level_dir = None
+            for parent in reversed(parents):
+                if parent.parent == path:
+                    top_level_dir = parent
+                    break
+            
+            # 获取最顶层目录的序号（如果存在）
+            top_dir_num = self._extract_number(top_level_dir.name) if top_level_dir else 999999
+            
             # 获取文件名中的数字
             file_num = self._extract_number(video.name)
-            # 返回排序元组：(父目录数字, 文件名数字, 完整文件名)
-            return (parent_dir_num, file_num, video.name)
+            
+            # 返回排序元组：(最顶层目录数字, 文件名数字, 完整文件名)
+            return (top_dir_num, file_num, video.name)
         
         # 按复合键排序
         video_files.sort(key=sort_key)
