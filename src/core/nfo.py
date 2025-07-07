@@ -230,54 +230,52 @@ class NFOGenerator:
             print(f"读取NFO文件时出错: {e}")
             return None
 
-    def generate_tvshow_nfo(self, show_path: str, title: str) -> None:
+    def generate_tvshow_nfo(self, show_path: str, title: str, season: int = 1) -> None:
         """生成剧集NFO文件
-        
         Args:
             show_path: 剧集目录路径
             title: 剧集标题
+            season: 第几季
         """
         # 创建XML根节点
         root = ET.Element("tvshow")
-        
         # 添加标题
         title_elem = ET.SubElement(root, "title")
         title_elem.text = title
-        
+        # 添加季数
+        season_elem = ET.SubElement(root, "season")
+        season_elem.text = str(season)
         # 格式化XML
         xml_str = minidom.parseString(ET.tostring(root)).toprettyxml(indent="  ")
-        
         # 保存文件
         nfo_path = Path(show_path) / "tvshow.nfo"
         nfo_path.write_text(xml_str, encoding="utf-8")
-    
-    def generate_episode_nfo(self, video_path: str, show_title: str, episode_num: int, title: str) -> None:
+
+    def generate_episode_nfo(self, video_path: str, show_title: str, episode_num: int, title: str, season: int = 1) -> None:
         """生成单集NFO文件
-        
         Args:
             video_path: 视频文件路径
             show_title: 剧集标题
             episode_num: 集数
             title: 本集标题
+            season: 第几季
         """
         # 创建XML根节点
         root = ET.Element("episodedetails")
-        
         # 添加剧集标题
         show_title_elem = ET.SubElement(root, "showtitle")
         show_title_elem.text = show_title
-        
         # 添加本集标题
         title_elem = ET.SubElement(root, "title")
         title_elem.text = title
-        
         # 添加集数
         episode_elem = ET.SubElement(root, "episode")
         episode_elem.text = str(episode_num)
-        
+        # 添加季数
+        season_elem = ET.SubElement(root, "season")
+        season_elem.text = str(season)
         # 格式化XML
         xml_str = minidom.parseString(ET.tostring(root)).toprettyxml(indent="  ")
-        
         # 保存文件
         nfo_path = Path(video_path).with_suffix(".nfo")
         nfo_path.write_text(xml_str, encoding="utf-8")

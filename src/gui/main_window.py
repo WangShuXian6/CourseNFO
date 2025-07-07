@@ -8,6 +8,8 @@ from .nfo_edit import NFOEditTab
 from .nomedia import NoMediaTab
 from .nfo_batch import NFOBatchTab
 from .nfo_type4 import NFOType4Tab
+from .variety_nfo import VarietyNfoTab
+from .variety_nfo_manual import VarietyNfoManualTab
 
 class MainWindow:
     """主窗口"""
@@ -62,6 +64,14 @@ class MainWindow:
         # 创建2层嵌套子目录标签页
         self.nfo_type4_tab = NFOType4Tab(self.notebook)
         self.notebook.add(self.nfo_type4_tab, text="2层嵌套子目录")
+        
+        # 创建综艺NFO生成标签页
+        self.variety_nfo_tab = VarietyNfoTab(self.notebook)
+        self.notebook.add(self.variety_nfo_tab, text="综艺NFO生成")
+        
+        # 创建综艺NFO手动排序标签页
+        self.variety_nfo_manual_tab = VarietyNfoManualTab(self.notebook)
+        self.notebook.add(self.variety_nfo_manual_tab, text="综艺NFO手动排序")
         
         # 绑定关闭事件
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
