@@ -10,6 +10,7 @@ from .nfo_batch import NFOBatchTab
 from .nfo_type4 import NFOType4Tab
 from .variety_nfo import VarietyNfoTab
 from .variety_nfo_manual import VarietyNfoManualTab
+from .short_drama_nfo import ShortDramaNfoTab
 
 class MainWindow:
     """主窗口"""
@@ -68,6 +69,10 @@ class MainWindow:
         # 创建综艺NFO生成标签页
         self.variety_nfo_tab = VarietyNfoTab(self.notebook)
         self.notebook.add(self.variety_nfo_tab, text="综艺NFO生成")
+        
+        # 创建短剧NFO生成标签页
+        self.short_drama_nfo_tab = ShortDramaNfoTab(self.notebook)
+        self.notebook.add(self.short_drama_nfo_tab, text="短剧NFO生成")
         
         # 创建综艺NFO手动排序标签页
         self.variety_nfo_manual_tab = VarietyNfoManualTab(self.notebook)
