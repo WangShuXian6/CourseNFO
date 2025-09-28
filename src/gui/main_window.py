@@ -11,6 +11,8 @@ from .nfo_type4 import NFOType4Tab
 from .variety_nfo import VarietyNfoTab
 from .variety_nfo_manual import VarietyNfoManualTab
 from .short_drama_nfo import ShortDramaNfoTab
+from .course_batch_tab import CourseBatchTab
+from .single_course_tab import SingleCourseTab
 
 class MainWindow:
     """主窗口"""
@@ -18,7 +20,7 @@ class MainWindow:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("课程NFO管理器")
-        self.root.geometry("1024x768")
+        self.root.geometry("1024x900")
         
         # 配置主题样式
         self._setup_theme()
@@ -45,6 +47,10 @@ class MainWindow:
         # 创建标签页控件
         self.notebook = ttk.Notebook(tab_container)
         self.notebook.pack(expand=True, fill='both')
+        
+        # 创建Single文件课程标签页（第一位）
+        self.single_course_tab = SingleCourseTab(self.notebook)
+        self.notebook.add(self.single_course_tab, text="Single文件课程")
         
         # 创建NFO生成标签页
         self.nfo_gen_tab = NFOGenTab(self.notebook)
@@ -77,6 +83,10 @@ class MainWindow:
         # 创建综艺NFO手动排序标签页
         self.variety_nfo_manual_tab = VarietyNfoManualTab(self.notebook)
         self.notebook.add(self.variety_nfo_manual_tab, text="综艺NFO手动排序")
+        
+        # 创建课程批量查找标签页
+        self.course_batch_tab = CourseBatchTab(self.notebook)
+        self.notebook.add(self.course_batch_tab, text="课程批量查找")
         
         # 绑定关闭事件
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
@@ -143,7 +153,7 @@ class MainWindow:
     def run(self):
         """运行应用程序"""
         # 设置窗口最小尺寸
-        self.root.minsize(800, 600)
+        self.root.minsize(800, 700)
         
         # 居中显示
         self.root.update_idletasks()
