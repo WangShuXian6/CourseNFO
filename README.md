@@ -327,6 +327,8 @@ python main.py
 ## 📸 界面预览
 
 <div align="center">
+  <img src="docs/screen.png" alt="主界面" width="600"/>
+  <br/>
   <img src="docs/1.png" alt="主界面" width="600"/>
   <br/>
   <img src="docs/4.png" alt="NFO编辑" width="600"/>
