@@ -439,29 +439,29 @@ git push origin v1.0.0
 
 **解决方案**：
 1. **设置执行权限**：
-   ```bash
-   chmod +x course-nfo-manager-macos
-   ```
+```bash
+chmod +x course-nfo-manager-macos
+```
 
 2. **通过终端运行**：
-   ```bash
-   ./course-nfo-manager-macos
-   ```
+```bash
+./course-nfo-manager-macos
+```
 
 3. **检查文件类型**：
-   ```bash
-   file course-nfo-manager-macos
-   ```
+```bash
+file course-nfo-manager-macos
+```
    应该显示类似：`course-nfo-manager-macos: Mach-O universal binary`
 
 4. **如果仍有问题，尝试**：
-   ```bash
-   # 移除隔离属性
-   xattr -d com.apple.quarantine course-nfo-manager-macos
-   
-   # 重新设置权限
-   chmod +x course-nfo-manager-macos
-   ```
+```bash
+# 移除隔离属性
+xattr -d com.apple.quarantine course-nfo-manager-macos
+
+# 重新设置权限
+chmod +x course-nfo-manager-macos
+```
 
 #### 问题：应用无法启动
 
@@ -469,6 +469,30 @@ git push origin v1.0.0
 1. 确保文件有执行权限
 2. 检查macOS安全设置，允许运行未签名的应用
 3. 在系统偏好设置 > 安全性与隐私 > 通用中允许应用运行
+
+#### 问题：macOS客户端需要打开两次才能运行
+
+**原因**：macOS Gatekeeper安全机制，未签名的应用需要用户确认
+
+**解决方案**：
+1. **第一次打开**：
+   - 双击应用图标
+   - 系统会显示"无法打开，因为无法验证开发者"的警告
+   - 点击"取消"
+
+2. **第二次打开**：
+   - 再次双击应用图标
+   - 系统会显示"无法打开，因为无法验证开发者"的警告
+   - 点击"打开"按钮
+   - 应用将正常启动
+
+3. **永久解决方案**（可选）：
+   ```bash
+   # 移除隔离属性，避免每次都需要打开两次
+   xattr -dr com.apple.quarantine course-nfo-manager-macos.app
+   ```
+
+**说明**：这是macOS的正常安全机制，用于保护用户免受恶意软件侵害。由于我们没有购买Apple开发者证书，系统会要求用户手动确认运行。
 
 ### 通用问题
 
