@@ -60,7 +60,7 @@ jobs:
       - name: Install build-time tools
         run: |
           pip install pyinstaller pillow
-          # 某些环境里 pathlib 与 stdlib 冲突，可按需卸载：
+          # 如环境里有 3rd-party pathlib 与 stdlib 冲突，可按需卸载：
           # pip uninstall -y pathlib || true
 
       # ---------- 从 docs/nfo.png 生成平台图标 ----------
@@ -69,37 +69,31 @@ jobs:
         shell: pwsh
         run: |
           if (-not (Test-Path "docs/nfo.png")) { throw "docs/nfo.png not found" }
-          $script = @'
-          from PIL import Image
-          img = Image.open("docs/nfo.png").convert("RGBA")
-          sizes = [(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)]
-          img.save("docs/icon.ico", sizes=sizes)
-          '@
-                    $script | python -
+          python -c "from PIL import Image; img=Image.open('docs/nfo.png').convert('RGBA'); img.save('docs/icon.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])"
 
-                - name: Prepare icons on macOS (.icns)
-                  if: matrix.os == 'macos-latest'
-                  shell: bash
-                  run: |
-                    set -euo pipefail
-                    [ -f "docs/nfo.png" ] || { echo "docs/nfo.png not found"; exit 1; }
-                    rm -rf docs/App.iconset
-                    mkdir -p docs/App.iconset
-                    for s in 16 32 128 256 512; do
-                      sips -z $s $s docs/nfo.png --out docs/App.iconset/icon_${s}x${s}.png >/dev/null
-                      s2=$((s*2))
-                      sips -z $s2 $s2 docs/nfo.png --out docs/App.iconset/icon_${s}x${s}@2x.png >/dev/null
-                    done
-                    cp docs/App.iconset/icon_512x512@2x.png docs/App.iconset/icon_1024x1024.png || true
-                    iconutil -c icns docs/App.iconset -o docs/icon.icns
+      - name: Prepare icons on macOS (.icns)
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ -f "docs/nfo.png" ] || { echo "docs/nfo.png not found"; exit 1; }
+          rm -rf docs/App.iconset
+          mkdir -p docs/App.iconset
+          for s in 16 32 128 256 512; do
+            sips -z $s $s docs/nfo.png --out docs/App.iconset/icon_${s}x${s}.png >/dev/null
+            s2=$((s*2))
+            sips -z $s2 $s2 docs/nfo.png --out docs/App.iconset/icon_${s}x${s}@2x.png >/dev/null
+          done
+          cp docs/App.iconset/icon_512x512@2x.png docs/App.iconset/icon_1024x1024.png || true
+          iconutil -c icns docs/App.iconset -o docs/icon.icns
 
-                - name: Prepare icons on Linux (.ico)
-                  if: matrix.os == 'ubuntu-latest'
-                  shell: bash
-                  run: |
-                    set -euo pipefail
-                    [ -f "docs/nfo.png" ] || { echo "docs/nfo.png not found"; exit 1; }
-                    python - <<'PY'
+      - name: Prepare icons on Linux (.ico)
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ -f "docs/nfo.png" ] || { echo "docs/nfo.png not found"; exit 1; }
+          python - <<'PY'
           from PIL import Image
           img = Image.open("docs/nfo.png").convert("RGBA")
           sizes = [(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)]
@@ -132,7 +126,6 @@ jobs:
           [ -f "docs/icon.ico" ] && ICON_ARG="--icon=docs/icon.ico"
           pyinstaller --onefile $ICON_ARG --name "${{ matrix.binary_stem }}" main.py
 
-      # Linux 裸二进制加执行位（macOS 用 .app 时无需）
       - name: Fix permissions (Linux)
         if: matrix.os == 'ubuntu-latest'
         shell: bash
@@ -203,6 +196,6 @@ jobs:
           body: |
             ## 发布说明
             - 使用 docs/nfo.png 作为唯一源图标，自动生成 Windows .ico / macOS .icns
-            - macOS 输出 .app（带图标），首次运行若被 Gatekeeper 拦截，可右键“打开”或：
-              `xattr -dr com.apple.quarantine "<App>.app"`
+            - macOS 输出 .app（带图标）；若被 Gatekeeper 拦截，可右键“打开”，或：
+              xattr -dr com.apple.quarantine "<App>.app"
             - 全平台产物均打包为 .zip
