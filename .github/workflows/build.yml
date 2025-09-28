@@ -96,10 +96,19 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: |
         if [ -f "docs/icon.icns" ]; then
-          pyinstaller --onefile --windowed --icon=docs/icon.icns --name=${{ matrix.asset_name }} main.py
+          pyinstaller --onefile --windowed --clean --target-arch universal2 --icon=docs/icon.icns --name=${{ matrix.asset_name }} main.py
         else
-          pyinstaller --onefile --windowed --name=${{ matrix.asset_name }} main.py
+          pyinstaller --onefile --windowed --clean --target-arch universal2 --name=${{ matrix.asset_name }} main.py
         fi
+        
+        # 设置执行权限
+        chmod +x dist/${{ matrix.asset_name }}
+        
+        # 验证文件类型
+        file dist/${{ matrix.asset_name }}
+        
+        # 检查文件权限
+        ls -la dist/${{ matrix.asset_name }}
 
     - name: Build with PyInstaller (Linux)
       if: matrix.os == 'ubuntu-latest'
@@ -125,6 +134,47 @@ jobs:
     - name: Download artifacts
       uses: actions/download-artifact@v4
 
+    - name: Create zip packages
+      run: |
+        # 创建各平台的zip文件
+        cd course-nfo-manager-windows.exe
+        zip -r ../course-nfo-manager-windows.zip .
+        cd ..
+        
+        cd course-nfo-manager-macos
+        zip -r ../course-nfo-manager-macos.zip .
+        cd ..
+        
+        cd course-nfo-manager-linux
+        zip -r ../course-nfo-manager-linux.zip .
+        cd ..
+        
+        # 创建包含所有平台的zip文件
+        mkdir all-platforms
+        cp course-nfo-manager-windows.exe/course-nfo-manager-windows.exe all-platforms/
+        cp course-nfo-manager-macos/course-nfo-manager-macos all-platforms/
+        cp course-nfo-manager-linux/course-nfo-manager-linux all-platforms/
+        
+        # 创建README文件
+        cat > all-platforms/README.txt << 'EOF'
+课程NFO管理器 - 跨平台版本
+
+包含文件：
+- course-nfo-manager-windows.exe (Windows版本)
+- course-nfo-manager-macos (macOS版本)
+- course-nfo-manager-linux (Linux版本)
+
+使用说明：
+1. 根据您的操作系统选择对应的可执行文件
+2. Windows用户：双击course-nfo-manager-windows.exe运行
+3. macOS用户：在终端中运行 ./course-nfo-manager-macos
+4. Linux用户：在终端中运行 ./course-nfo-manager-linux
+
+更多信息请访问：https://github.com/your-username/course-nfo-manager
+EOF
+        
+        zip -r course-nfo-manager-all-platforms.zip all-platforms/
+
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
@@ -132,6 +182,10 @@ jobs:
           course-nfo-manager-windows.exe/course-nfo-manager-windows.exe
           course-nfo-manager-macos/course-nfo-manager-macos
           course-nfo-manager-linux/course-nfo-manager-linux
+          course-nfo-manager-windows.zip
+          course-nfo-manager-macos.zip
+          course-nfo-manager-linux.zip
+          course-nfo-manager-all-platforms.zip
         draft: false
         prerelease: false
         token: ${{ secrets.GITHUB_TOKEN }}
@@ -141,8 +195,22 @@ jobs:
           
           ### 新功能
           - 自动构建的跨平台可执行文件
+          - 提供zip打包文件，方便下载和分发
           
-          ### 下载
+          ### 下载方式
+          
+          #### 单独下载
           - Windows: `course-nfo-manager-windows.exe`
           - macOS: `course-nfo-manager-macos`
-          - Linux: `course-nfo-manager-linux` 
+          - Linux: `course-nfo-manager-linux`
+          
+          #### Zip打包下载（推荐）
+          - Windows: `course-nfo-manager-windows.zip`
+          - macOS: `course-nfo-manager-macos.zip`
+          - Linux: `course-nfo-manager-linux.zip`
+          - 所有平台: `course-nfo-manager-all-platforms.zip`
+          
+          ### 使用说明
+          1. 下载对应平台的zip文件
+          2. 解压后运行可执行文件
+          3. macOS用户需要在终端中运行：`./course-nfo-manager-macos` 

@@ -407,7 +407,7 @@ pip install pyinstaller
 pyinstaller --onefile --windowed --icon=docs/icon.ico --name=course-nfo-manager-windows.exe main.py
 
 # macOS
-pyinstaller --onefile --windowed --icon=docs/icon.icns --name=course-nfo-manager-macos main.py
+pyinstaller --onefile --windowed --clean --target-arch universal2 --icon=docs/icon.icns --name=course-nfo-manager-macos main.py
 
 # Linux
 pyinstaller --onefile --name=course-nfo-manager-linux main.py
@@ -426,6 +426,64 @@ git push origin v1.0.0
 ```
 
 这将自动触发构建流程，并在 GitHub Releases 页面创建新的发布版本。
+
+## 🔧 故障排除
+
+### macOS 用户常见问题
+
+#### 问题：显示"未能打开文稿，文本编码Unicode (UTF-8)不适用"
+
+**原因**：macOS可执行文件权限或文件类型识别问题
+
+**解决方案**：
+1. **设置执行权限**：
+   ```bash
+   chmod +x course-nfo-manager-macos
+   ```
+
+2. **通过终端运行**：
+   ```bash
+   ./course-nfo-manager-macos
+   ```
+
+3. **检查文件类型**：
+   ```bash
+   file course-nfo-manager-macos
+   ```
+   应该显示类似：`course-nfo-manager-macos: Mach-O universal binary`
+
+4. **如果仍有问题，尝试**：
+   ```bash
+   # 移除隔离属性
+   xattr -d com.apple.quarantine course-nfo-manager-macos
+   
+   # 重新设置权限
+   chmod +x course-nfo-manager-macos
+   ```
+
+#### 问题：应用无法启动
+
+**解决方案**：
+1. 确保文件有执行权限
+2. 检查macOS安全设置，允许运行未签名的应用
+3. 在系统偏好设置 > 安全性与隐私 > 通用中允许应用运行
+
+### 通用问题
+
+#### 问题：找不到依赖模块
+
+**解决方案**：
+1. 确保安装了所有依赖：`pip install -r requirements.txt`
+2. 检查Python版本兼容性（需要Python 3.8+）
+3. 重新安装依赖：`pip install --upgrade -r requirements.txt`
+
+#### 问题：NFO文件生成失败
+
+**解决方案**：
+1. 检查目录权限
+2. 确保有写入权限
+3. 检查文件路径长度（Windows用户）
+4. 确保使用UTF-8编码
 
 ---
 
