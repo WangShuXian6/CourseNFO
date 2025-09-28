@@ -25,13 +25,13 @@ jobs:
         python-version: ['3.8']
         include:
           - os: windows-latest
-            binary_name: course-nfo-manager-windows.exe
+            binary_stem: course-nfo-manager-windows
             archive_name: course-nfo-manager-windows.zip
           - os: macos-latest
-            binary_name: course-nfo-manager-macos
+            binary_stem: course-nfo-manager-macos
             archive_name: course-nfo-manager-macos.app.zip
           - os: ubuntu-latest
-            binary_name: course-nfo-manager-linux
+            binary_stem: course-nfo-manager-linux
             archive_name: course-nfo-manager-linux.zip
 
     steps:
@@ -60,105 +60,110 @@ jobs:
       - name: Install build-time tools
         run: |
           pip install pyinstaller pillow
+          # 某些环境里 pathlib 与 stdlib 冲突，可按需卸载：
+          # pip uninstall -y pathlib || true
 
-      # 从 docs/nfo.png 生成平台图标
+      # ---------- 从 docs/nfo.png 生成平台图标 ----------
       - name: Prepare icons on Windows (.ico)
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          if (-not (Test-Path "docs/nfo.png")) {
-            Write-Error "docs/nfo.png not found"; exit 1
-          }
-          python - << 'PY'
+          if (-not (Test-Path "docs/nfo.png")) { throw "docs/nfo.png not found" }
+          $script = @'
+          from PIL import Image
+          img = Image.open("docs/nfo.png").convert("RGBA")
+          sizes = [(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)]
+          img.save("docs/icon.ico", sizes=sizes)
+          '@
+                    $script | python -
+
+                - name: Prepare icons on macOS (.icns)
+                  if: matrix.os == 'macos-latest'
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    [ -f "docs/nfo.png" ] || { echo "docs/nfo.png not found"; exit 1; }
+                    rm -rf docs/App.iconset
+                    mkdir -p docs/App.iconset
+                    for s in 16 32 128 256 512; do
+                      sips -z $s $s docs/nfo.png --out docs/App.iconset/icon_${s}x${s}.png >/dev/null
+                      s2=$((s*2))
+                      sips -z $s2 $s2 docs/nfo.png --out docs/App.iconset/icon_${s}x${s}@2x.png >/dev/null
+                    done
+                    cp docs/App.iconset/icon_512x512@2x.png docs/App.iconset/icon_1024x1024.png || true
+                    iconutil -c icns docs/App.iconset -o docs/icon.icns
+
+                - name: Prepare icons on Linux (.ico)
+                  if: matrix.os == 'ubuntu-latest'
+                  shell: bash
+                  run: |
+                    set -euo pipefail
+                    [ -f "docs/nfo.png" ] || { echo "docs/nfo.png not found"; exit 1; }
+                    python - <<'PY'
           from PIL import Image
           img = Image.open("docs/nfo.png").convert("RGBA")
           sizes = [(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)]
           img.save("docs/icon.ico", sizes=sizes)
           PY
 
-      - name: Prepare icons on macOS (.icns)
-        if: matrix.os == 'macos-latest'
-        run: |
-          set -euo pipefail
-          test -f "docs/nfo.png" || { echo "docs/nfo.png not found"; exit 1; }
-          rm -rf docs/App.iconset
-          mkdir -p docs/App.iconset
-          # 生成 Apple 要求的多尺寸 PNG
-          for s in 16 32 128 256 512; do
-            s2=$((s*2))
-            sips -z $s $s docs/nfo.png --out docs/App.iconset/icon_${s}x${s}.png >/dev/null
-            sips -z $s2 $s2 docs/nfo.png --out docs/App.iconset/icon_${s}x${s}@2x.png >/dev/null
-          done
-          # 1024 尺寸（512@2x）
-          cp docs/App.iconset/icon_512x512@2x.png docs/App.iconset/icon_1024x1024.png || true
-          iconutil -c icns docs/App.iconset -o docs/icon.icns
-
-      - name: Prepare icons on Linux (.ico)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          set -euo pipefail
-          test -f "docs/nfo.png" || { echo "docs/nfo.png not found"; exit 1; }
-          python - << 'PY'
-          from PIL import Image
-          img = Image.open("docs/nfo.png").convert("RGBA")
-          sizes = [(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)]
-          img.save("docs/icon.ico", sizes=sizes)
-          PY
-
-      # --- 构建 ---
+      # --------------------- 构建 ----------------------
       - name: Build with PyInstaller (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          $iconArg = Test-Path "docs/icon.ico" ? "--icon=docs/icon.ico" : ""
-          pyinstaller --onefile --windowed $iconArg --name="${{ matrix.binary_name }}" main.py
+          $iconArg = ""
+          if (Test-Path "docs/icon.ico") { $iconArg = "--icon=docs/icon.ico" }
+          pyinstaller --onefile --windowed $iconArg --name "${{ matrix.binary_stem }}" main.py
 
       - name: Build with PyInstaller (macOS, produce .app)
         if: matrix.os == 'macos-latest'
+        shell: bash
         run: |
+          set -euo pipefail
           ICON_ARG=""
-          if [ -f "docs/icon.icns" ]; then ICON_ARG="--icon=docs/icon.icns"; fi
-          # --windowed 会生成 .app；搭配 --onefile 仍然是 .app 结构，内含打包的单文件引导器
-          pyinstaller --onefile --windowed $ICON_ARG --name="${{ matrix.binary_name }}" main.py
+          [ -f "docs/icon.icns" ] && ICON_ARG="--icon=docs/icon.icns"
+          pyinstaller --onefile --windowed $ICON_ARG --name "${{ matrix.binary_stem }}" main.py
 
       - name: Build with PyInstaller (Linux)
         if: matrix.os == 'ubuntu-latest'
+        shell: bash
         run: |
           ICON_ARG=""
-          if [ -f "docs/icon.ico" ]; then ICON_ARG="--icon=docs/icon.ico"; fi
-          pyinstaller --onefile $ICON_ARG --name="${{ matrix.binary_name }}" main.py
+          [ -f "docs/icon.ico" ] && ICON_ARG="--icon=docs/icon.ico"
+          pyinstaller --onefile $ICON_ARG --name "${{ matrix.binary_stem }}" main.py
 
-      # 修复执行权限（Linux 产物 & 如果选择裸二进制）
-      - name: Fix permissions (non-Windows)
-        if: matrix.os != 'windows-latest'
+      # Linux 裸二进制加执行位（macOS 用 .app 时无需）
+      - name: Fix permissions (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
         run: |
-          # macOS 使用 .app 时无需此步，但如果 PyInstaller 也产出同名裸二进制，则一并处理
-          test -f "dist/${{ matrix.binary_name }}" && chmod +x "dist/${{ matrix.binary_name }}" || true
+          chmod +x "dist/${{ matrix.binary_stem }}"
 
-      # --- 打包为 zip ---
+      # -------------------- 打包为 zip -----------------
       - name: Package (zip) on Windows
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          Compress-Archive -Path "dist\\${{ matrix.binary_name }}" -DestinationPath "dist\\${{ matrix.archive_name }}" -Force
+          Compress-Archive -Path "dist\\${{ matrix.binary_stem }}.exe" -DestinationPath "dist\\${{ matrix.archive_name }}" -Force
 
       - name: Package (zip) on macOS - zip the .app bundle
         if: matrix.os == 'macos-latest'
+        shell: bash
         run: |
           set -euo pipefail
           cd dist
-          # 目标为 MyApp.app
-          if [ -d "${{ matrix.binary_name }}.app" ]; then
-            /usr/bin/zip -9 -r "${{ matrix.archive_name }}" "${{ matrix.binary_name }}.app"
+          if [ -d "${{ matrix.binary_stem }}.app" ]; then
+            /usr/bin/zip -9 -r "${{ matrix.archive_name }}" "${{ matrix.binary_stem }}.app"
           else
-            echo "WARNING: .app not found; zipping bare binary instead (icon won't show on Finder/Dock)."
-            /usr/bin/zip -9 -r "${{ matrix.archive_name }}" "${{ matrix.binary_name }}"
+            echo "WARNING: .app not found; zipping bare binary instead (icon won't show in Finder/Dock)."
+            /usr/bin/zip -9 -r "${{ matrix.archive_name }}" "${{ matrix.binary_stem }}"
           fi
 
       - name: Package (zip) on Linux
         if: matrix.os == 'ubuntu-latest'
+        shell: bash
         run: |
-          cd dist && zip -9 -r "${{ matrix.archive_name }}" "${{ matrix.binary_name }}"
+          cd dist && zip -9 -r "${{ matrix.archive_name }}" "${{ matrix.binary_stem }}"
 
       - name: Upload artifact (zip)
         uses: actions/upload-artifact@v4
@@ -181,6 +186,9 @@ jobs:
         with:
           merge-multiple: true
 
+      - name: List files
+        run: ls -lah
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -194,5 +202,7 @@ jobs:
           name: Release ${{ github.ref_name }}
           body: |
             ## 发布说明
+            - 使用 docs/nfo.png 作为唯一源图标，自动生成 Windows .ico / macOS .icns
+            - macOS 输出 .app（带图标），首次运行若被 Gatekeeper 拦截，可右键“打开”或：
+              `xattr -dr com.apple.quarantine "<App>.app"`
             - 全平台产物均打包为 .zip
-            - macOS 为 .app（带图标），首次运行若被 Gatekeeper 拦截，可右键“打开”或在终端执行：`xattr -dr com.apple.quarantine MyApp.app`

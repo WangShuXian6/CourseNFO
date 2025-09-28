@@ -1,6 +1,8 @@
-# 课程NFO管理器 | Course NFO Manager
-
 <div align="center">
+
+<img src="docs/nfo.png" alt="课程NFO管理器 Logo" width="120" height="120">
+
+# 课程NFO管理器 | Course NFO Manager
 
 [English](README_EN.md) | [简体中文](README.md) | [繁體中文](README_ZH_TW.md) | [日本語](README_JA.md) | [Español](README_ES.md) | [Deutsch](README_DE.md)
 
