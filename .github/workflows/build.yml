@@ -6,7 +6,6 @@ on:
       - 'v*'
   workflow_dispatch:
 
-# 添加全局权限配置
 permissions:
   contents: write
   packages: write
@@ -26,101 +25,147 @@ jobs:
         python-version: ['3.8']
         include:
           - os: windows-latest
-            asset_name: course-nfo-manager-windows.exe
-            asset_content_type: application/vnd.microsoft.portable-executable
+            binary_name: course-nfo-manager-windows.exe
+            archive_name: course-nfo-manager-windows.zip
           - os: macos-latest
-            asset_name: course-nfo-manager-macos
-            asset_content_type: application/x-mach-binary
+            binary_name: course-nfo-manager-macos
+            archive_name: course-nfo-manager-macos.app.zip
           - os: ubuntu-latest
-            asset_name: course-nfo-manager-linux
-            asset_content_type: application/x-executable
+            binary_name: course-nfo-manager-linux
+            archive_name: course-nfo-manager-linux.zip
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Install poetry
-      run: |
-        python -m pip install --upgrade pip
-        pip install poetry
+      - name: Install poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
 
-    - name: Configure poetry
-      run: |
-        poetry config virtualenvs.create false
+      - name: Configure poetry
+        run: |
+          poetry config virtualenvs.create false
 
-    - name: Install dependencies
-      run: |
-        poetry install
+      - name: Install dependencies
+        run: |
+          poetry install
 
-    - name: Install PyInstaller and remove pathlib
-      run: |
-        pip install pyinstaller
-        pip uninstall -y pathlib
+      - name: Install build-time tools
+        run: |
+          pip install pyinstaller pillow
 
-    - name: Create default icons
-      run: |
-        python -c "
-        from PIL import Image
-        import os
-        
-        # 创建一个简单的图标
-        img = Image.new('RGB', (256, 256), color='white')
-        
-        # 确保目录存在
-        os.makedirs('docs', exist_ok=True)
-        
-        # 保存为 ICO 文件
-        img.save('docs/icon.ico', format='ICO', sizes=[(256, 256)])
-        
-        # 保存为 ICNS 文件（macOS）
-        if os.name != 'nt':  # 不在 Windows 上执行
-            img.save('docs/icon.icns', format='ICNS')
-        "
+      # 从 docs/nfo.png 生成平台图标
+      - name: Prepare icons on Windows (.ico)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "docs/nfo.png")) {
+            Write-Error "docs/nfo.png not found"; exit 1
+          }
+          python - << 'PY'
+          from PIL import Image
+          img = Image.open("docs/nfo.png").convert("RGBA")
+          sizes = [(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)]
+          img.save("docs/icon.ico", sizes=sizes)
+          PY
 
-    - name: Build with PyInstaller (Windows)
-      if: matrix.os == 'windows-latest'
-      run: |
-        if (Test-Path "docs/icon.ico") {
-          pyinstaller --onefile --windowed --icon=docs/icon.ico --name=${{ matrix.asset_name }} main.py
-        } else {
-          pyinstaller --onefile --windowed --name=${{ matrix.asset_name }} main.py
-        }
+      - name: Prepare icons on macOS (.icns)
+        if: matrix.os == 'macos-latest'
+        run: |
+          set -euo pipefail
+          test -f "docs/nfo.png" || { echo "docs/nfo.png not found"; exit 1; }
+          rm -rf docs/App.iconset
+          mkdir -p docs/App.iconset
+          # 生成 Apple 要求的多尺寸 PNG
+          for s in 16 32 128 256 512; do
+            s2=$((s*2))
+            sips -z $s $s docs/nfo.png --out docs/App.iconset/icon_${s}x${s}.png >/dev/null
+            sips -z $s2 $s2 docs/nfo.png --out docs/App.iconset/icon_${s}x${s}@2x.png >/dev/null
+          done
+          # 1024 尺寸（512@2x）
+          cp docs/App.iconset/icon_512x512@2x.png docs/App.iconset/icon_1024x1024.png || true
+          iconutil -c icns docs/App.iconset -o docs/icon.icns
 
-    - name: Build with PyInstaller (macOS)
-      if: matrix.os == 'macos-latest'
-      run: |
-        if [ -f "docs/icon.icns" ]; then
-          pyinstaller --onefile --windowed --clean --target-arch universal2 --icon=docs/icon.icns --name=${{ matrix.asset_name }} main.py
-        else
-          pyinstaller --onefile --windowed --clean --target-arch universal2 --name=${{ matrix.asset_name }} main.py
-        fi
-        
-        # 设置执行权限
-        chmod +x dist/${{ matrix.asset_name }}
-        
-        # 验证文件类型
-        file dist/${{ matrix.asset_name }}
-        
-        # 检查文件权限
-        ls -la dist/${{ matrix.asset_name }}
+      - name: Prepare icons on Linux (.ico)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          set -euo pipefail
+          test -f "docs/nfo.png" || { echo "docs/nfo.png not found"; exit 1; }
+          python - << 'PY'
+          from PIL import Image
+          img = Image.open("docs/nfo.png").convert("RGBA")
+          sizes = [(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)]
+          img.save("docs/icon.ico", sizes=sizes)
+          PY
 
-    - name: Build with PyInstaller (Linux)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        pyinstaller --onefile --name=${{ matrix.asset_name }} main.py
+      # --- 构建 ---
+      - name: Build with PyInstaller (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $iconArg = Test-Path "docs/icon.ico" ? "--icon=docs/icon.ico" : ""
+          pyinstaller --onefile --windowed $iconArg --name="${{ matrix.binary_name }}" main.py
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.asset_name }}
-        path: dist/${{ matrix.asset_name }}*
-        retention-days: 5
+      - name: Build with PyInstaller (macOS, produce .app)
+        if: matrix.os == 'macos-latest'
+        run: |
+          ICON_ARG=""
+          if [ -f "docs/icon.icns" ]; then ICON_ARG="--icon=docs/icon.icns"; fi
+          # --windowed 会生成 .app；搭配 --onefile 仍然是 .app 结构，内含打包的单文件引导器
+          pyinstaller --onefile --windowed $ICON_ARG --name="${{ matrix.binary_name }}" main.py
+
+      - name: Build with PyInstaller (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          ICON_ARG=""
+          if [ -f "docs/icon.ico" ]; then ICON_ARG="--icon=docs/icon.ico"; fi
+          pyinstaller --onefile $ICON_ARG --name="${{ matrix.binary_name }}" main.py
+
+      # 修复执行权限（Linux 产物 & 如果选择裸二进制）
+      - name: Fix permissions (non-Windows)
+        if: matrix.os != 'windows-latest'
+        run: |
+          # macOS 使用 .app 时无需此步，但如果 PyInstaller 也产出同名裸二进制，则一并处理
+          test -f "dist/${{ matrix.binary_name }}" && chmod +x "dist/${{ matrix.binary_name }}" || true
+
+      # --- 打包为 zip ---
+      - name: Package (zip) on Windows
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "dist\\${{ matrix.binary_name }}" -DestinationPath "dist\\${{ matrix.archive_name }}" -Force
+
+      - name: Package (zip) on macOS - zip the .app bundle
+        if: matrix.os == 'macos-latest'
+        run: |
+          set -euo pipefail
+          cd dist
+          # 目标为 MyApp.app
+          if [ -d "${{ matrix.binary_name }}.app" ]; then
+            /usr/bin/zip -9 -r "${{ matrix.archive_name }}" "${{ matrix.binary_name }}.app"
+          else
+            echo "WARNING: .app not found; zipping bare binary instead (icon won't show on Finder/Dock)."
+            /usr/bin/zip -9 -r "${{ matrix.archive_name }}" "${{ matrix.binary_name }}"
+          fi
+
+      - name: Package (zip) on Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd dist && zip -9 -r "${{ matrix.archive_name }}" "${{ matrix.binary_name }}"
+
+      - name: Upload artifact (zip)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.archive_name }}
+          path: dist/${{ matrix.archive_name }}
+          retention-days: 5
 
   release:
     needs: build
@@ -131,84 +176,23 @@ jobs:
       packages: write
 
     steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
 
-    - name: Create zip packages
-      run: |
-        # 创建各平台的zip文件
-        cd course-nfo-manager-windows.exe
-        zip -r ../course-nfo-manager-windows.zip .
-        cd ..
-        
-        cd course-nfo-manager-macos
-        zip -r ../course-nfo-manager-macos.zip .
-        cd ..
-        
-        cd course-nfo-manager-linux
-        zip -r ../course-nfo-manager-linux.zip .
-        cd ..
-        
-        # 创建包含所有平台的zip文件
-        mkdir all-platforms
-        cp course-nfo-manager-windows.exe/course-nfo-manager-windows.exe all-platforms/
-        cp course-nfo-manager-macos/course-nfo-manager-macos all-platforms/
-        cp course-nfo-manager-linux/course-nfo-manager-linux all-platforms/
-        
-        # 创建README文件
-        echo "课程NFO管理器 - 跨平台版本" > all-platforms/README.txt
-        echo "" >> all-platforms/README.txt
-        echo "包含文件：" >> all-platforms/README.txt
-        echo "- course-nfo-manager-windows.exe (Windows版本)" >> all-platforms/README.txt
-        echo "- course-nfo-manager-macos (macOS版本)" >> all-platforms/README.txt
-        echo "- course-nfo-manager-linux (Linux版本)" >> all-platforms/README.txt
-        echo "" >> all-platforms/README.txt
-        echo "使用说明：" >> all-platforms/README.txt
-        echo "1. 根据您的操作系统选择对应的可执行文件" >> all-platforms/README.txt
-        echo "2. Windows用户：双击course-nfo-manager-windows.exe运行" >> all-platforms/README.txt
-        echo "3. macOS用户：在终端中运行 ./course-nfo-manager-macos" >> all-platforms/README.txt
-        echo "4. Linux用户：在终端中运行 ./course-nfo-manager-linux" >> all-platforms/README.txt
-        echo "" >> all-platforms/README.txt
-        echo "更多信息请访问：https://github.com/your-username/course-nfo-manager" >> all-platforms/README.txt
-        
-        zip -r course-nfo-manager-all-platforms.zip all-platforms/
-
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          course-nfo-manager-windows.exe/course-nfo-manager-windows.exe
-          course-nfo-manager-macos/course-nfo-manager-macos
-          course-nfo-manager-linux/course-nfo-manager-linux
-          course-nfo-manager-windows.zip
-          course-nfo-manager-macos.zip
-          course-nfo-manager-linux.zip
-          course-nfo-manager-all-platforms.zip
-        draft: false
-        prerelease: false
-        token: ${{ secrets.GITHUB_TOKEN }}
-        name: Release ${{ github.ref_name }}
-        body: |
-          ## 发布说明
-          
-          ### 新功能
-          - 自动构建的跨平台可执行文件
-          - 提供zip打包文件，方便下载和分发
-          
-          ### 下载方式
-          
-          #### 单独下载
-          - Windows: `course-nfo-manager-windows.exe`
-          - macOS: `course-nfo-manager-macos`
-          - Linux: `course-nfo-manager-linux`
-          
-          #### Zip打包下载（推荐）
-          - Windows: `course-nfo-manager-windows.zip`
-          - macOS: `course-nfo-manager-macos.zip`
-          - Linux: `course-nfo-manager-linux.zip`
-          - 所有平台: `course-nfo-manager-all-platforms.zip`
-          
-          ### 使用说明
-          1. 下载对应平台的zip文件
-          2. 解压后运行可执行文件
-          3. macOS用户需要在终端中运行：`./course-nfo-manager-macos` 
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            course-nfo-manager-windows.zip
+            course-nfo-manager-macos.app.zip
+            course-nfo-manager-linux.zip
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: Release ${{ github.ref_name }}
+          body: |
+            ## 发布说明
+            - 全平台产物均打包为 .zip
+            - macOS 为 .app（带图标），首次运行若被 Gatekeeper 拦截，可右键“打开”或在终端执行：`xattr -dr com.apple.quarantine MyApp.app`
