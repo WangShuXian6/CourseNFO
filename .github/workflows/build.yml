@@ -156,22 +156,20 @@ jobs:
         cp course-nfo-manager-linux/course-nfo-manager-linux all-platforms/
         
         # 创建README文件
-        cat > all-platforms/README.txt << 'EOF'
-课程NFO管理器 - 跨平台版本
-
-包含文件：
-- course-nfo-manager-windows.exe (Windows版本)
-- course-nfo-manager-macos (macOS版本)
-- course-nfo-manager-linux (Linux版本)
-
-使用说明：
-1. 根据您的操作系统选择对应的可执行文件
-2. Windows用户：双击course-nfo-manager-windows.exe运行
-3. macOS用户：在终端中运行 ./course-nfo-manager-macos
-4. Linux用户：在终端中运行 ./course-nfo-manager-linux
-
-更多信息请访问：https://github.com/your-username/course-nfo-manager
-EOF
+        echo "课程NFO管理器 - 跨平台版本" > all-platforms/README.txt
+        echo "" >> all-platforms/README.txt
+        echo "包含文件：" >> all-platforms/README.txt
+        echo "- course-nfo-manager-windows.exe (Windows版本)" >> all-platforms/README.txt
+        echo "- course-nfo-manager-macos (macOS版本)" >> all-platforms/README.txt
+        echo "- course-nfo-manager-linux (Linux版本)" >> all-platforms/README.txt
+        echo "" >> all-platforms/README.txt
+        echo "使用说明：" >> all-platforms/README.txt
+        echo "1. 根据您的操作系统选择对应的可执行文件" >> all-platforms/README.txt
+        echo "2. Windows用户：双击course-nfo-manager-windows.exe运行" >> all-platforms/README.txt
+        echo "3. macOS用户：在终端中运行 ./course-nfo-manager-macos" >> all-platforms/README.txt
+        echo "4. Linux用户：在终端中运行 ./course-nfo-manager-linux" >> all-platforms/README.txt
+        echo "" >> all-platforms/README.txt
+        echo "更多信息请访问：https://github.com/your-username/course-nfo-manager" >> all-platforms/README.txt
         
         zip -r course-nfo-manager-all-platforms.zip all-platforms/
 

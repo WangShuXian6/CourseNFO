@@ -524,6 +524,53 @@ macOS打包文件编码问题修复完成，现在构建流程包含：
 - **权限处理**：自动设置正确的文件权限
 - **验证机制**：构建后验证文件完整性
 
+---
+
+# 全平台Zip打包功能任务
+
+## 任务描述
+用户要求将所有打包文件都打包成zip文件，提供全平台的zip下载包。
+
+## 问题分析
+1. 当前只提供单独的可执行文件
+2. 用户需要zip打包文件方便下载和分发
+3. YAML语法错误需要修复
+
+## 实施计划
+1. 更新GitHub Actions Release阶段，添加zip打包步骤
+2. 创建各平台的zip文件
+3. 创建包含所有平台的zip文件
+4. 修复YAML语法错误
+
+## 实施结果
+- ✅ 更新了GitHub Actions Release阶段，添加了zip打包步骤
+- ✅ 创建了各平台的zip文件（Windows、macOS、Linux）
+- ✅ 创建了包含所有平台的zip文件
+- ✅ 修复了YAML语法错误（heredoc语法问题）
+- ✅ 更新了Release文件列表
+- ✅ 添加了README文件到全平台zip包中
+
+## 最终结果
+全平台Zip打包功能完成，现在Release包含：
+
+### 📦 Zip打包文件
+- **Windows**: `course-nfo-manager-windows.zip`
+- **macOS**: `course-nfo-manager-macos.zip`
+- **Linux**: `course-nfo-manager-linux.zip`
+- **全平台**: `course-nfo-manager-all-platforms.zip`
+
+### 📋 功能特点
+1. **单独平台zip**: 每个平台独立的zip文件
+2. **全平台zip**: 包含所有平台可执行文件的zip包
+3. **README文件**: 全平台zip包含使用说明
+4. **多种下载方式**: 同时提供单独文件和zip文件
+
+### 🔧 技术实现
+- **YAML语法修复**: 使用echo命令替代heredoc语法
+- **文件组织**: 合理的文件结构和命名
+- **README生成**: 自动生成使用说明文件
+- **Release优化**: 清晰的下载说明和文件列表
+
 *   2024-12-19
     *   Step: 13-16. 测试和验证功能
     *   Modifications: 
@@ -860,3 +907,50 @@ macOS打包文件编码问题修复完成，现在构建流程包含：
 - **清理构建**：--clean参数清理临时文件
 - **权限处理**：自动设置正确的文件权限
 - **验证机制**：构建后验证文件完整性
+
+---
+
+# 全平台Zip打包功能任务
+
+## 任务描述
+用户要求将所有打包文件都打包成zip文件，提供全平台的zip下载包。
+
+## 问题分析
+1. 当前只提供单独的可执行文件
+2. 用户需要zip打包文件方便下载和分发
+3. YAML语法错误需要修复
+
+## 实施计划
+1. 更新GitHub Actions Release阶段，添加zip打包步骤
+2. 创建各平台的zip文件
+3. 创建包含所有平台的zip文件
+4. 修复YAML语法错误
+
+## 实施结果
+- ✅ 更新了GitHub Actions Release阶段，添加了zip打包步骤
+- ✅ 创建了各平台的zip文件（Windows、macOS、Linux）
+- ✅ 创建了包含所有平台的zip文件
+- ✅ 修复了YAML语法错误（heredoc语法问题）
+- ✅ 更新了Release文件列表
+- ✅ 添加了README文件到全平台zip包中
+
+## 最终结果
+全平台Zip打包功能完成，现在Release包含：
+
+### 📦 Zip打包文件
+- **Windows**: `course-nfo-manager-windows.zip`
+- **macOS**: `course-nfo-manager-macos.zip`
+- **Linux**: `course-nfo-manager-linux.zip`
+- **全平台**: `course-nfo-manager-all-platforms.zip`
+
+### 📋 功能特点
+1. **单独平台zip**: 每个平台独立的zip文件
+2. **全平台zip**: 包含所有平台可执行文件的zip包
+3. **README文件**: 全平台zip包含使用说明
+4. **多种下载方式**: 同时提供单独文件和zip文件
+
+### 🔧 技术实现
+- **YAML语法修复**: 使用echo命令替代heredoc语法
+- **文件组织**: 合理的文件结构和命名
+- **README生成**: 自动生成使用说明文件
+- **Release优化**: 清晰的下载说明和文件列表
