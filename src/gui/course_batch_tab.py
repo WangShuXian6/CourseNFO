@@ -21,9 +21,14 @@ class CourseBatchTab(ttk.Frame):
         self.batch_nfo_generator = BatchNFOGenerator()
         self.scanner = DirectoryScanner()
         # 语言目录名集合（用于忽略语言目录的嵌套出现）
-        self.mandarin_dir_names = {"普通话Deepl", "普通话DeepL", "普通话DeepL[男声]", "普通话DeepL[女声]"}
+        self.default_mandarin_dir_names = {"普通话Deepl", "普通话DeepL", "普通话DeepL[男声]", "普通话DeepL[女声]", "普通话OpenAI-4o-mini", "普通话gemini"}
+        self.mandarin_dir_names = set(self.default_mandarin_dir_names)
         self.original_dir_names = {"原"}
         self.language_dir_names = self.mandarin_dir_names | self.original_dir_names
+        if hasattr(self.finder, 'mandarin_dir_names'):
+            self.finder.mandarin_dir_names = set(self.mandarin_dir_names)
+        if hasattr(self.batch_nfo_generator, 'mandarin_dir_names'):
+            self.batch_nfo_generator.mandarin_dir_names = set(self.mandarin_dir_names)
         # 自定义普通话目录输入
         self.custom_mandarin_var = tk.StringVar()
         self.courses = []
@@ -155,11 +160,13 @@ class CourseBatchTab(ttk.Frame):
         # 合并自定义普通话目录名
         custom_names = self._parse_custom_mandarin_names()
         if custom_names:
-            self.mandarin_dir_names = {"普通话Deepl", "普通话DeepL"} | custom_names
+            self.mandarin_dir_names = set(self.default_mandarin_dir_names) | custom_names
             self.language_dir_names = self.mandarin_dir_names | self.original_dir_names
             # 同步到查找器，确保只匹配课程根目录的直接子目录
             if hasattr(self.finder, 'mandarin_dir_names'):
                 self.finder.mandarin_dir_names = set(self.mandarin_dir_names)
+            if hasattr(self.batch_nfo_generator, 'mandarin_dir_names'):
+                self.batch_nfo_generator.mandarin_dir_names = set(self.mandarin_dir_names)
 
         self._reset_state()
         self.status_var.set("正在扫描目录...")
@@ -245,8 +252,9 @@ class CourseBatchTab(ttk.Frame):
         for course in courses_to_process:
             try:
                 # 为每个语言版本生成NFO
-                if course.has_mandarin and course.mandarin_path:
-                    self._generate_course_nfo_for_language(course, course.mandarin_path, True)
+                if course.has_mandarin and getattr(course, "mandarin_paths", None):
+                    for mandarin_path in course.mandarin_paths:
+                        self._generate_course_nfo_for_language(course, mandarin_path, True)
                 
                 if course.has_original and course.original_path:
                     self._generate_course_nfo_for_language(course, course.original_path, False)

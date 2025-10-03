@@ -3,7 +3,7 @@
 """
 from pathlib import Path
 from typing import List, Tuple, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import os
 
 @dataclass
@@ -14,7 +14,7 @@ class CourseInfo:
     has_mandarin: bool
     has_original: bool
     lesson_files: List[Path]
-    mandarin_path: Optional[Path] = None
+    mandarin_paths: List[Path] = field(default_factory=list)
     original_path: Optional[Path] = None
 
 class CourseBatchFinder:
@@ -22,7 +22,7 @@ class CourseBatchFinder:
     
     def __init__(self):
         # 兼容不同的普通话目录命名（可由GUI在运行时扩展）
-        self.mandarin_dir_names = {"普通话Deepl", "普通话DeepL", "普通话DeepL[男声]", "普通话DeepL[女声]"}
+        self.mandarin_dir_names = {"普通话Deepl", "普通话DeepL", "普通话DeepL[男声]", "普通话DeepL[女声]", "普通话OpenAI-4o-mini", "普通话gemini"}
         # 兼容可能的原版目录命名（目前以“原”为主，后续可扩展）
         self.original_dir_names = {"原"}
         self.lesson_file_name = "lession"  # 课程标识文件名称
@@ -108,8 +108,8 @@ class CourseBatchFinder:
                 return None
             
             # 检查语言目录并解析实际路径
-            mandarin_path, original_path = self._resolve_language_directories(path)
-            has_mandarin = mandarin_path is not None
+            mandarin_paths, original_path = self._resolve_language_directories(path)
+            has_mandarin = bool(mandarin_paths)
             has_original = original_path is not None
             
             return CourseInfo(
@@ -118,7 +118,7 @@ class CourseBatchFinder:
                 has_mandarin=has_mandarin,
                 has_original=has_original,
                 lesson_files=lesson_files,
-                mandarin_path=mandarin_path,
+                mandarin_paths=mandarin_paths,
                 original_path=original_path
             )
             
@@ -126,30 +126,31 @@ class CourseBatchFinder:
             print(f"创建课程信息时出错 {path}: {e}")
             return None
     
-    def _resolve_language_directories(self, path: Path) -> Tuple[Optional[Path], Optional[Path]]:
+    def _resolve_language_directories(self, path: Path) -> Tuple[List[Path], Optional[Path]]:
         """解析课程目录中的语言子目录，返回实际路径
         
         Args:
             path: 课程目录路径
             
         Returns:
-            (普通话目录Path或None, 原版目录Path或None)
+            (普通话目录Path列表, 原版目录Path或None)
         """
         try:
-            mandarin_path = None
+            mandarin_paths = []
             original_path = None
             for item in path.iterdir():
                 if not item.is_dir():
                     continue
                 # 普通话目录匹配（两种命名）
                 if item.name in self.mandarin_dir_names:
-                    mandarin_path = item
+                    mandarin_paths.append(item)
                 # 原版目录匹配（当前仅“原”）
                 if item.name in self.original_dir_names:
                     original_path = item
-            return mandarin_path, original_path
+            mandarin_paths.sort(key=lambda p: p.name)
+            return mandarin_paths, original_path
         except Exception:
-            return None, None
+            return [], None
     
     def get_scan_statistics(self, courses: List[CourseInfo]) -> dict:
         """获取扫描统计信息

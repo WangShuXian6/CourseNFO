@@ -13,7 +13,7 @@ class BatchNFOGenerator:
     def __init__(self):
         self.overwrite = True  # 默认覆盖现有文件
         # 语言目录命名映射支持
-        self.mandarin_dir_names = {"普通话Deepl", "普通话DeepL", "普通话DeepL[男声]", "普通话DeepL[女声]"}
+        self.mandarin_dir_names = {"普通话Deepl", "普通话DeepL", "普通话DeepL[男声]", "普通话DeepL[女声]", "普通话OpenAI-4o-mini", "普通话gemini"}
         self.original_dir_names = {"原"}
         
     def generate_course_nfos(self, course_path: Path, language_path: Path, 
@@ -76,32 +76,17 @@ class BatchNFOGenerator:
             print(f"生成tvshow.nfo时出错: {e}")
 
     def _get_language_label(self, dir_name: str, is_mandarin: bool) -> str:
-        """根据语言目录名生成标题中的语言标识
-        规则：
-        - 原 → 英语
-        - 普通话Deepl/普通话DeepL → 普通话
-        - 普通话DeepL[男声] → 普通话[男声]
-        - 普通话DeepL[女声] → 普通话[女声]
-        - 其他以"普通话DeepL"或"普通话Deepl"开头且带[]尾缀的 → 普通话[自定义标记]
+        """根据语言目录名生成标题中的语言标识。
+        普通话目录返回目录本身的名称，方便区分多版本的普通话NFO。
+        原版目录继续使用英语标识。
         """
-        # 英语目录
+        dir_name = (dir_name or "").strip()
         if dir_name in self.original_dir_names or dir_name == "原":
             return "英语"
-        # 普通话目录基础
-        if dir_name in {"普通话Deepl", "普通话DeepL"}:
-            return "普通话"
-        # 带变体的普通话，如 普通话DeepL[男声]
-        # 统一处理：找到方括号中的内容
-        if dir_name.startswith("普通话DeepL") or dir_name.startswith("普通话Deepl"):
-            start = dir_name.find('[')
-            end = dir_name.find(']')
-            if start != -1 and end != -1 and end > start + 1:
-                variant = dir_name[start+1:end].strip()
-                return f"普通话[{variant}]"
-            return "普通话"
-        # 回退：根据is_mandarin布尔值
-        return "普通话" if is_mandarin else "英语"
-    
+        if is_mandarin:
+            return dir_name or "普通话"
+        return dir_name or "英语"
+
     def _generate_all_episode_nfos(self, language_path: Path, chapters: List[Chapter], language_label: str) -> None:
         """生成所有视频的NFO文件"""
         try:
