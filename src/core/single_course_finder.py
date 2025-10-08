@@ -81,6 +81,42 @@ class SingleCourseFinder:
             return (top_dir_num, file_num, video.name)
         
         video_files.sort(key=sort_key)
+
+        # 追加：支持 5.1.3、5.1.3.2 等点分数字前缀进行精确排序
+        def __extract_numeric_tuple(name: str):
+            import re
+            s = name.strip()
+            m = re.match(r'^(\d+(?:\.\d+)+)', s)
+            if m:
+                try:
+                    return tuple(int(p) for p in m.group(1).split('.'))
+                except Exception:
+                    pass
+            m2 = re.match(r'^(\d+)(?:\s*[-_\.]?\s*)?', s)
+            if m2:
+                try:
+                    return (int(m2.group(1)),)
+                except Exception:
+                    pass
+            return (999999,)
+
+        def __final_key(video: VideoFile):
+            names = []
+            curr = video.path.parent
+            try:
+                while curr != path and path in curr.parents:
+                    names.append(curr.name)
+                    curr = curr.parent
+            except Exception:
+                pass
+            names.reverse()
+            seq = []
+            for n in names:
+                seq.extend(__extract_numeric_tuple(n))
+            seq.extend(__extract_numeric_tuple(video.name))
+            return (tuple(seq), video.name.lower())
+
+        video_files.sort(key=__final_key)
         
         # 更新全局集数
         for i, video in enumerate(video_files, 1):

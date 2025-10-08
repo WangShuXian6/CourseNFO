@@ -12,6 +12,7 @@ from .variety_nfo import VarietyNfoTab
 from .variety_nfo_manual import VarietyNfoManualTab
 from .short_drama_nfo import ShortDramaNfoTab
 from .course_batch_tab import CourseBatchTab
+from .course_batch_nested_tab import CourseBatchNestedTab
 from .single_course_tab import SingleCourseTab
 
 class MainWindow:
@@ -87,6 +88,10 @@ class MainWindow:
         # 创建课程批量查找标签页
         self.course_batch_tab = CourseBatchTab(self.notebook)
         self.notebook.add(self.course_batch_tab, text="课程批量查找")
+        
+        # 创建多级目录课程批量查找标签页（lession_2 + 可配置层级）
+        self.course_batch_nested_tab = CourseBatchNestedTab(self.notebook)
+        self.notebook.add(self.course_batch_nested_tab, text="课程批量查找(多级)")
         
         # 绑定关闭事件
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
