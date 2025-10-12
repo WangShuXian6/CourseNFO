@@ -32,6 +32,10 @@ class SingleCourseTab(ttk.Frame):
         self.path_var = tk.StringVar()
         self.path_entry = ttk.Entry(self.path_frame, textvariable=self.path_var, width=60)
         self.browse_btn = ttk.Button(self.path_frame, text="选择目录", command=self._browse_directory)
+        # 自定义类型（genre），默认“课程”
+        self.genre_var = tk.StringVar(value="课程")
+        self.genre_label = ttk.Label(self.path_frame, text="类型/Genre")
+        self.genre_entry = ttk.Entry(self.path_frame, textvariable=self.genre_var, width=12)
         self.scan_btn = ttk.Button(self.path_frame, text="开始扫描", command=self._start_scan, state='disabled')
 
         # 进度显示区域
@@ -98,6 +102,8 @@ class SingleCourseTab(ttk.Frame):
         self.path_entry.pack(side='left', expand=True, fill='x', padx=(0, 5))
         self.browse_btn.pack(side='left', padx=(0, 5))
         self.scan_btn.pack(side='left')
+        self.genre_label.pack(side='left', padx=(10, 5))
+        self.genre_entry.pack(side='left')
 
         # 进度显示区域
         self.progress_frame.pack(fill='x', padx=5, pady=5)
@@ -184,6 +190,13 @@ class SingleCourseTab(ttk.Frame):
         ):
             return
             
+        # 应用自定义类型（genre），默认为“课程”
+        try:
+            genre_value = (self.genre_var.get() or "").strip() or "课程"
+            self.single_nfo_generator.default_genre = genre_value
+        except Exception:
+            self.single_nfo_generator.default_genre = "课程"
+        
         self.progress_var.set(0)
         self.generate_nfo_btn.configure(state='disabled')
         self.status_var.set("正在生成NFO文件...")

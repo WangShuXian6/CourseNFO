@@ -12,6 +12,7 @@ class SingleNFOGenerator:
     
     def __init__(self):
         self.overwrite = True  # 默认覆盖现有文件
+        self.default_genre = "课程"  # 可自定义，默认“课程”
         
     def generate_course_nfos(self, course_path: Path, chapters: List[Chapter]) -> None:
         """为Single文件课程生成所有NFO文件
@@ -46,16 +47,18 @@ class SingleNFOGenerator:
                 if "[" in course_name:
                     course_name = course_name.split("[")[0].strip()
                 
-                title.text = f"{course_name} 课程"
+                title.text = f"{course_name}"
                 
                 # 添加描述
                 plot = ET.SubElement(root, "plot")
                 total_videos = self._count_total_videos(chapters)
-                plot.text = f"课程：{course_path.name}\n总集数：{total_videos}\n类型：Single文件课程"
+                plot.text = f"{course_path.name}\n总集数：{total_videos}\n类型：课程"
                 
                 # 添加类型标签
                 genre = ET.SubElement(root, "genre")
-                genre.text = "课程"
+                genre.text = self.default_genre
+                # 确保plot中的类型与genre一致
+                plot.text = f"{course_path.name}\n总集数：{total_videos}\n类型：{self.default_genre}"
                 
                 # 写入文件
                 self._write_xml(root, nfo_path)
@@ -107,7 +110,7 @@ class SingleNFOGenerator:
                 # 添加描述
                 plot = ET.SubElement(root, "plot")
                 base = f"章节：{chapter_name}" if chapter_name else ""
-                plot.text = f"{base}\n类型：Single文件课程" if base else "类型：Single文件课程"
+                plot.text = f"{base}\n类型：{self.default_genre}" if base else f"类型：{self.default_genre}"
                 
                 # 添加季数
                 season = ET.SubElement(root, "season")
