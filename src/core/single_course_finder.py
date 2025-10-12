@@ -100,6 +100,32 @@ class SingleCourseFinder:
                     pass
             return (999999,)
 
+        def __extract_numeric_tuple_ep(name: str):
+            import re
+            s = (name or "").strip()
+            # 点分数字（如 5.1.3）
+            m = re.search(r'(\d+(?:\.\d+)+)', s)
+            if m:
+                try:
+                    return tuple(int(p) for p in m.group(1).split('.'))
+                except Exception:
+                    pass
+            # EP/Episode/E/P + 数字（如 EP01、E2、Episode 12）
+            m = re.search(r'(?i)\b(?:ep|e|episode|part|p)\s*0*(\d+)\b', s)
+            if m:
+                try:
+                    return (int(m.group(1)),)
+                except Exception:
+                    pass
+            # 任意位置的首个数字序列（如 Chapter 03）
+            m = re.search(r'0*(\d+)', s)
+            if m:
+                try:
+                    return (int(m.group(1)),)
+                except Exception:
+                    pass
+            return (999999,)
+
         def __final_key(video: VideoFile):
             names = []
             curr = video.path.parent
@@ -112,8 +138,8 @@ class SingleCourseFinder:
             names.reverse()
             seq = []
             for n in names:
-                seq.extend(__extract_numeric_tuple(n))
-            seq.extend(__extract_numeric_tuple(video.name))
+                seq.extend(__extract_numeric_tuple_ep(n))
+            seq.extend(__extract_numeric_tuple_ep(video.name))
             return (tuple(seq), video.name.lower())
 
         video_files.sort(key=__final_key)
